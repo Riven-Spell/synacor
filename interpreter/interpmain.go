@@ -202,6 +202,47 @@ func (s *System) Step() error {
 		} else {
 			return errors.New("can't pop from an empty stack")
 		}
+
+	case opcodes.AND:
+		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
+			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
+				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
+					*a = b & c
+				} else {
+					return err
+				}
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+
+	case opcodes.OR:
+		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
+			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
+				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
+					*a = b | c
+				} else {
+					return err
+				}
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+
+	case opcodes.NOT:
+		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
+			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
+				*a = ^b & 0x7FFF
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 
 	s.ProgramCounter += opcodes.OpcodeLength[s.Memory[s.ProgramCounter]]

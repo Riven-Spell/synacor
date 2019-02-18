@@ -245,3 +245,45 @@ func TestStack(t *testing.T){
 		t.Fail()
 	}
 }
+
+func TestAnd(t *testing.T) {
+	system := interpreter.NewSystem()
+	loadEfficient(system, []uint16{opcodes.AND, 32768, 0x00FF, 0x000F})
+
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[0] != 0x000F {
+		t.Errorf("Expected register 0 to hold %d, got %d\n", 0x000F, system.Registers[0])
+	}
+}
+
+func TestOr(t *testing.T) {
+	system := interpreter.NewSystem()
+	loadEfficient(system, []uint16{opcodes.OR, 32768, 0x00FF, 0x0000})
+
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[0] != 0x00FF {
+		t.Errorf("Expected register 0 to hold %d, got %d\n", 0x00FF, system.Registers[0])
+	}
+}
+
+func TestNot(t *testing.T) {
+	system := interpreter.NewSystem()
+	loadEfficient(system, []uint16{opcodes.NOT, 32768, 0x00FF})
+
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[0] != 0x7F00 {
+		t.Errorf("Expected register 0 to hold %d, got %d\n", 0x7F00, system.Registers[0])
+	}
+}
