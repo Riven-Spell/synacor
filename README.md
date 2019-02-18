@@ -1,6 +1,6 @@
 # go-synacor
 
-An implementation of the synacor challenge done natively in golang. Could definitely be improved. Actual improvements to come in due time.
+An implementation of the synacor challenge done natively in golang. Could definitely be improved. Actual improvements to come in due time. Some are now present, including removing the switch and replacing it with a map of functions.
 
 For now, it's literally just an interpreter that uses switch statements.
 
