@@ -13,12 +13,38 @@ const nMod = 32768
 
 var reader = bufio.NewReader(os.Stdin)
 
+var funcMap = map[uint16]func(*System)error{
+	opcodes.HALT: halt,
+	opcodes.SET: set,
+	opcodes.PUSH: push,
+	opcodes.POP: pop,
+	opcodes.EQ: eq,
+	opcodes.GT: gt,
+	opcodes.JMP: jmp,
+	opcodes.JT: jt,
+	opcodes.JF: jf,
+	opcodes.ADD: add,
+	opcodes.MULT: mult,
+	opcodes.MOD: mod,
+	opcodes.AND: and,
+	opcodes.OR: or,
+	opcodes.NOT: not,
+	opcodes.RMEM: rmem,
+	opcodes.WMEM: wmem,
+	opcodes.NOOP: noop,
+	opcodes.OUT: out,
+	opcodes.RET: ret,
+	opcodes.CALL: call,
+	opcodes.IN: in,
+}
+
 type System struct {
 	Memory         [32768]uint16
 	Registers      [8]uint16
 	Stack          []uint16
 	ProgramCounter uint16
 	Halted         bool
+	DoJump         bool
 }
 
 func NewSystem() *System {
@@ -78,264 +104,18 @@ func (s *System) Step() error {
 		return errors.New("CPU is halted, cannot continue")
 	}
 
-	switch s.Memory[s.ProgramCounter] {
-	case opcodes.NOOP: //Nothing happens.
+	s.DoJump = true
 
-	case opcodes.HALT: //The system halts.
-		s.Halted = true
+	op := s.Memory[s.ProgramCounter]
 
-	case opcodes.ADD: //Add b & c, store to a; add a b c
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
-			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
-				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
-					*a = b + c
-					*a %= 32768
-				} else {
-					return err
-				}
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.MULT:
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
-			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
-				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
-					*a = b * c
-					*a %= 32768
-				} else {
-					return err
-				}
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.MOD:
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
-			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
-				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
-					*a = b % c
-					*a %= 32768
-				} else {
-					return err
-				}
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.OUT: //Output the ASCII character value of a; out a
-		if a, err := s.GetValue(s.Memory[s.ProgramCounter+1]); err == nil {
-			fmt.Printf("%c", rune(a))
-		} else {
-			return err
-		}
-
-	case opcodes.IN:
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
-			if b, err := reader.ReadByte(); err == nil {
-				*a = uint16(b)
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.JMP: //Unconditionally jump to a; jmp a
-		var err error
-		if s.ProgramCounter, err = s.GetValue(s.Memory[s.ProgramCounter+1]); err != nil {
-			return err
-		} else {
-			return nil //Bypass program counter increment.
-		}
-
-	case opcodes.JT: //Jump to b if a is nonzero; jt a b
-		if val, err := s.GetValue(s.Memory[s.ProgramCounter+1]); err == nil {
-			if val != 0 {
-				if s.ProgramCounter, err = s.GetValue(s.Memory[s.ProgramCounter+2]); err != nil {
-					return err
-				} else {
-					return nil //Bypass program encounter increment.
-				}
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.JF: //Jump to b if a is zero; jf a b
-		if val, err := s.GetValue(s.Memory[s.ProgramCounter+1]); err == nil {
-			if val == 0 {
-				if s.ProgramCounter, err = s.GetValue(s.Memory[s.ProgramCounter+2]); err != nil {
-					return err
-				} else {
-					return nil
-				}
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.SET:
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
-			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
-				*a = b
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.EQ:
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
-			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
-				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
-					if b == c {
-						*a = 1
-					} else {
-						*a = 0
-					}
-				} else {
-					return err
-				}
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.GT:
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
-			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
-				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
-					if b > c {
-						*a = 1
-					} else {
-						*a = 0
-					}
-				} else {
-					return err
-				}
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.PUSH:
-		if a, err := s.GetValue(s.Memory[s.ProgramCounter+1]); err == nil {
-			s.Stack = append(s.Stack, a)
-		} else {
-			return err
-		}
-
-	case opcodes.POP:
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil || len(s.Stack) == 0 {
-			*a = s.Stack[len(s.Stack) - 1]
-			s.Stack = s.Stack[:len(s.Stack) - 1]
-		} else if err != nil{
-			return err
-		} else {
-			return errors.New("can't pop from an empty stack")
-		}
-
-	case opcodes.AND:
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
-			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
-				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
-					*a = b & c
-				} else {
-					return err
-				}
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.OR:
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
-			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
-				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
-					*a = b | c
-				} else {
-					return err
-				}
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.NOT:
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
-			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
-				*a = ^b & 0x7FFF
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.CALL:
-		if a, err := s.GetValue(s.Memory[s.ProgramCounter+1]); err == nil {
-			s.Stack = append(s.Stack, s.ProgramCounter + opcodes.OpcodeLength[s.Memory[s.ProgramCounter]])
-			s.ProgramCounter = a
-			return nil //bypass pc increment
-		} else {
-			return err
-		}
-
-	case opcodes.RET:
-		if len(s.Stack) == 0 {
-			s.Halted = true
-			return errors.New("can't return with an empty stack")
-		} else {
-			s.ProgramCounter = s.Stack[len(s.Stack) - 1]
-			s.Stack = s.Stack[:len(s.Stack) - 1]
-			return nil //bypass pc increment
-		}
-
-	case opcodes.RMEM:
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], true); err == nil {
-			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
-				*a = s.Memory[b]
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
-
-	case opcodes.WMEM:
-		if al, err := s.GetValue(s.Memory[s.ProgramCounter+1]); err == nil {
-			if a, err := s.GetLocation(al, true); err == nil {
-				if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
-					*a = b
-				} else {
-					return err
-				}
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
+	toIncrement := opcodes.OpcodeLength[op]
+	if err := funcMap[op](s); err != nil {
+		return err
 	}
 
-	s.ProgramCounter += opcodes.OpcodeLength[s.Memory[s.ProgramCounter]]
+	if s.DoJump {
+		s.ProgramCounter += toIncrement
+	}
 
 	return nil
 }
