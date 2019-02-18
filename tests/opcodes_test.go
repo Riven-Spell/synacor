@@ -186,3 +186,62 @@ func TestCondSet(t *testing.T) {
 		t.Error("Expected register 3 to be 0, got ", system.Registers[3])
 	}
 }
+
+func TestStack(t *testing.T){
+	system := interpreter.NewSystem()
+	loadEfficient(system, []uint16{opcodes.PUSH, 5, opcodes.PUSH, 6, opcodes.POP, 32768, opcodes.POP, 32769})
+
+	//push 5; stack len = 1, stack[0] = 5
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if len(system.Stack) != 1 {
+		t.Error("Expected a stack length of 1, got", len(system.Stack))
+		t.Fail()
+	}
+
+	//push 6; stack len = 2, stack [1] = 6
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if len(system.Stack) != 2 {
+		t.Error("Expected a stack length of 2, got", len(system.Stack))
+		t.Fail()
+	}
+
+	//pop 32768; stack len = 1, register[0] = 6
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[0] != 6 {
+		t.Error("Expected register 0 to hold 6, got", system.Registers[0])
+		t.Fail()
+	}
+
+	if len(system.Stack) != 1 {
+		t.Error("Expected a stack length of 1, got", len(system.Stack))
+		t.Fail()
+	}
+
+	//pop 32769; stack len = 0, register[1] = 5
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[1] != 5 {
+		t.Error("Expected register 1 to hold 5, got", system.Registers[1])
+		t.Fail()
+	}
+
+	if len(system.Stack) != 0 {
+		t.Error("Expected a stack length of 0, got", len(system.Stack))
+		t.Fail()
+	}
+}
