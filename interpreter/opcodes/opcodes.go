@@ -32,7 +32,7 @@ var OpcodeLength = map[uint16]uint16{
 	POP:  2,
 	EQ:   4,
 	GT:   4,
-	JMP:  0,
+	JMP:  6,
 	JT:   3,
 	JF:   3,
 	ADD:  4,

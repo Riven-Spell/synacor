@@ -250,6 +250,7 @@ func TestAnd(t *testing.T) {
 	system := interpreter.NewSystem()
 	loadEfficient(system, []uint16{opcodes.AND, 32768, 0x00FF, 0x000F})
 
+	//and 32768 255 15; register[0] = 15
 	if err := system.Step(); err != nil {
 		t.Error(err.Error())
 		t.Fail()
@@ -264,6 +265,7 @@ func TestOr(t *testing.T) {
 	system := interpreter.NewSystem()
 	loadEfficient(system, []uint16{opcodes.OR, 32768, 0x00FF, 0x0000})
 
+	//or 32768 255 0; register[0] = 255
 	if err := system.Step(); err != nil {
 		t.Error(err.Error())
 		t.Fail()
@@ -278,6 +280,7 @@ func TestNot(t *testing.T) {
 	system := interpreter.NewSystem()
 	loadEfficient(system, []uint16{opcodes.NOT, 32768, 0x00FF})
 
+	//not 32768 0x00FF; register[0] == 0x7F00
 	if err := system.Step(); err != nil {
 		t.Error(err.Error())
 		t.Fail()
@@ -285,5 +288,47 @@ func TestNot(t *testing.T) {
 
 	if system.Registers[0] != 0x7F00 {
 		t.Errorf("Expected register 0 to hold %d, got %d\n", 0x7F00, system.Registers[0])
+	}
+}
+
+func TestCallRet(t *testing.T) {
+	system := interpreter.NewSystem()
+	loadEfficient(system, []uint16{opcodes.CALL, 3, opcodes.HALT, opcodes.RET})
+
+	//call 3; pc = 3, stack len = 1, stack 0 = 2
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.ProgramCounter != 3 {
+		t.Error("Expected program counter to jump to 3 after call 3, got", system.ProgramCounter)
+		t.Fail()
+	}
+
+	if len(system.Stack) == 1 {
+		if system.Stack[0] != 2 {
+			t.Error("Stack[0] should be 2, got", system.Stack[0])
+			t.Fail()
+		}
+	} else {
+		t.Error("Stack length should be 1, got", len(system.Stack))
+		t.Fail()
+	}
+
+	//ret; pc = 2, stack len = 0
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.ProgramCounter != 2 {
+		t.Error("Expected program counter to return to 2 after ret, got", system.ProgramCounter)
+		t.Fail()
+	}
+
+	if len(system.Stack) != 0 {
+		t.Error("Expected stack length to be 0, got", len(system.Stack))
+		t.Fail()
 	}
 }

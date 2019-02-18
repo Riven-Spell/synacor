@@ -243,6 +243,25 @@ func (s *System) Step() error {
 		} else {
 			return err
 		}
+
+	case opcodes.CALL:
+		if a, err := s.GetValue(s.Memory[s.ProgramCounter+1]); err == nil {
+			s.Stack = append(s.Stack, s.ProgramCounter + opcodes.OpcodeLength[s.Memory[s.ProgramCounter]])
+			s.ProgramCounter = a
+			return nil //bypass pc increment
+		} else {
+			return err
+		}
+
+	case opcodes.RET:
+		if len(s.Stack) == 0 {
+			s.Halted = true
+			return errors.New("can't return with an empty stack")
+		} else {
+			s.ProgramCounter = s.Stack[len(s.Stack) - 1]
+			s.Stack = s.Stack[:len(s.Stack) - 1]
+			return nil //bypass pc increment
+		}
 	}
 
 	s.ProgramCounter += opcodes.OpcodeLength[s.Memory[s.ProgramCounter]]
