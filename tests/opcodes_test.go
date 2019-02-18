@@ -28,6 +28,38 @@ func TestAdd(t *testing.T) {
 	}
 }
 
+//Multiply 4 by 5, store in register 0, result 20
+func TestMul(t *testing.T) {
+	system := interpreter.NewSystem()
+	loadEfficient(system, []uint16{opcodes.MULT, 32768, 4, 5})
+
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[0] != 20 {
+		t.Errorf("Expected system.Registers[0] to be 20, got %d\n", system.Registers[0])
+		t.Fail()
+	}
+}
+
+//modulo 21 by 4, store in register 0, result 1
+func TestModulo(t *testing.T) {
+	system := interpreter.NewSystem()
+	loadEfficient(system, []uint16{opcodes.MOD, 32768, 21, 4})
+
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[0] != 1 {
+		t.Errorf("Expected system.Registers[0] to be 1, got %d\n", system.Registers[0])
+		t.Fail()
+	}
+}
+
 //Halt the system.
 func TestHalt(t *testing.T) {
 	system := interpreter.NewSystem()
@@ -60,6 +92,7 @@ func TestJump(t *testing.T) {
 	}
 }
 
+//Test the jump conditionals by jumping over noops and not jumping
 func TestJumpConditionals(t *testing.T) {
 	system := interpreter.NewSystem()
 	loadEfficient(system, []uint16{opcodes.JT, 1, 5, opcodes.NOOP, opcodes.NOOP, opcodes.JT, 0, 5, opcodes.NOOP, opcodes.JF, 0, 15, opcodes.NOOP, opcodes.NOOP, opcodes.NOOP, opcodes.JF, 1, 15, 0})
@@ -115,6 +148,7 @@ func TestJumpConditionals(t *testing.T) {
 	}
 }
 
+//Tries setting the register to a valid value, as well as an invalid value.
 func TestSet(t *testing.T) {
 	system := interpreter.NewSystem()
 	loadEfficient(system, []uint16{opcodes.SET, 32768, 50, opcodes.SET, 32769, 32768})
@@ -142,6 +176,7 @@ func TestSet(t *testing.T) {
 	}
 }
 
+//Tests the conditional set operations, by giving them both true and false conditions.
 func TestCondSet(t *testing.T) {
 	system := interpreter.NewSystem()
 	loadEfficient(system, []uint16{opcodes.EQ, 32768, 1, 1, opcodes.EQ, 32769, 1, 5, opcodes.GT, 32770, 5, 1, opcodes.GT, 32771, 1, 5})
@@ -187,6 +222,7 @@ func TestCondSet(t *testing.T) {
 	}
 }
 
+//Tests the stack by pushing and popping from it
 func TestStack(t *testing.T){
 	system := interpreter.NewSystem()
 	loadEfficient(system, []uint16{opcodes.PUSH, 5, opcodes.PUSH, 6, opcodes.POP, 32768, opcodes.POP, 32769})
@@ -246,6 +282,7 @@ func TestStack(t *testing.T){
 	}
 }
 
+//Tests binary and
 func TestAnd(t *testing.T) {
 	system := interpreter.NewSystem()
 	loadEfficient(system, []uint16{opcodes.AND, 32768, 0x00FF, 0x000F})
@@ -261,6 +298,7 @@ func TestAnd(t *testing.T) {
 	}
 }
 
+//Tests binary or
 func TestOr(t *testing.T) {
 	system := interpreter.NewSystem()
 	loadEfficient(system, []uint16{opcodes.OR, 32768, 0x00FF, 0x0000})
@@ -276,6 +314,7 @@ func TestOr(t *testing.T) {
 	}
 }
 
+//Tests binary not
 func TestNot(t *testing.T) {
 	system := interpreter.NewSystem()
 	loadEfficient(system, []uint16{opcodes.NOT, 32768, 0x00FF})
@@ -291,6 +330,7 @@ func TestNot(t *testing.T) {
 	}
 }
 
+//Tests the call and return system
 func TestCallRet(t *testing.T) {
 	system := interpreter.NewSystem()
 	loadEfficient(system, []uint16{opcodes.CALL, 3, opcodes.HALT, opcodes.RET})
@@ -330,5 +370,30 @@ func TestCallRet(t *testing.T) {
 	if len(system.Stack) != 0 {
 		t.Error("Expected stack length to be 0, got", len(system.Stack))
 		t.Fail()
+	}
+}
+
+//Writes to memory, then reads from it
+func TestMemory(t *testing.T) {
+	system := interpreter.NewSystem()
+	loadEfficient(system, []uint16{opcodes.WMEM, 50, 69, opcodes.RMEM, 32768, 50})
+
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Memory[50] != 69 {
+		t.Error("Expected memory[50] to be 69, but got", system.Memory[50])
+		t.Fail()
+	}
+
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Memory[50] != 69 || system.Registers[0] != 69 {
+		t.Error("Expected memory[50] and registers[0] to be 69, but got", system.Memory[50], system.Registers[0], "respectively")
 	}
 }

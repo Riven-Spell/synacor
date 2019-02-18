@@ -96,6 +96,38 @@ func (s *System) Step() error {
 			return err
 		}
 
+	case opcodes.MULT:
+		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
+			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
+				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
+					*a = b * c
+					*a %= 32768
+				} else {
+					return err
+				}
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+
+	case opcodes.MOD:
+		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
+			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
+				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
+					*a = b % c
+					*a %= 32768
+				} else {
+					return err
+				}
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+
 	case opcodes.OUT: //Output the ASCII character value of a; out a
 		if a, err := s.GetValue(s.Memory[s.ProgramCounter+1]); err == nil {
 			fmt.Printf("%c", rune(a))
@@ -261,6 +293,32 @@ func (s *System) Step() error {
 			s.ProgramCounter = s.Stack[len(s.Stack) - 1]
 			s.Stack = s.Stack[:len(s.Stack) - 1]
 			return nil //bypass pc increment
+		}
+
+	case opcodes.RMEM:
+		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], true); err == nil {
+			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
+				*a = s.Memory[b]
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+
+	case opcodes.WMEM:
+		if al, err := s.GetValue(s.Memory[s.ProgramCounter+1]); err == nil {
+			if a, err := s.GetLocation(al, true); err == nil {
+				if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
+					*a = b
+				} else {
+					return err
+				}
+			} else {
+				return err
+			}
+		} else {
+			return err
 		}
 	}
 
