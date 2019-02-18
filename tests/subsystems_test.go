@@ -37,7 +37,7 @@ func TestGetLocation(t *testing.T) {
 	system.Registers[0] = 500
 	system.Memory[50] = 600
 
-	if val, err := system.GetLocation(32768); *val != 500 || val != &system.Registers[0] || err != nil {
+	if val, err := system.GetLocation(32768, false); *val != 500 || val != &system.Registers[0] || err != nil {
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -46,7 +46,7 @@ func TestGetLocation(t *testing.T) {
 		t.Fail()
 	}
 
-	if val, err := system.GetLocation(50); *val != 600 || val != &system.Memory[50] || err != nil {
+	if val, err := system.GetLocation(50, true); *val != 600 || val != &system.Memory[50] || err != nil {
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -55,7 +55,7 @@ func TestGetLocation(t *testing.T) {
 		t.Fail()
 	}
 
-	if val, err := system.GetLocation(32776); val != nil || err == nil {
+	if val, err := system.GetLocation(32776, false); val != nil || err == nil {
 		t.Errorf("Expected an error, got pointer value %p\n", val)
 		t.Fail()
 	}

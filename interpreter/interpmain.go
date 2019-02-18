@@ -49,8 +49,8 @@ func (s *System) StartSystem() error {
 	return nil
 }
 
-func (s *System) GetLocation(location uint16) (*uint16, error) {
-	if location <= 32767 {
+func (s *System) GetLocation(location uint16, memPtrPossible bool) (*uint16, error) {
+	if location <= 32767 && memPtrPossible {
 		return &s.Memory[location], nil
 	} else if location <= 32775 {
 		return &s.Registers[location-32768], nil
@@ -81,7 +81,7 @@ func (s *System) Step() error {
 		s.Halted = true
 
 	case opcodes.ADD: //Add b & c, store to a; add a b c
-		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1]); err == nil {
+		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
 			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
 				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
 					*a = b + c
@@ -136,6 +136,56 @@ func (s *System) Step() error {
 		} else {
 			return err
 		}
+
+	case opcodes.SET:
+		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
+			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
+				*a = b
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+
+	case opcodes.EQ:
+		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
+			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
+				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
+					if b == c {
+						*a = 1
+					} else {
+						*a = 0
+					}
+				} else {
+					return err
+				}
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+
+	case opcodes.GT:
+		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
+			if b, err := s.GetValue(s.Memory[s.ProgramCounter+2]); err == nil {
+				if c, err := s.GetValue(s.Memory[s.ProgramCounter+3]); err == nil {
+					if b > c {
+						*a = 1
+					} else {
+						*a = 0
+					}
+				} else {
+					return err
+				}
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+
 	}
 
 	s.ProgramCounter += opcodes.OpcodeLength[s.Memory[s.ProgramCounter]]

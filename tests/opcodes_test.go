@@ -64,5 +64,125 @@ func TestJumpConditionals(t *testing.T) {
 	system := interpreter.NewSystem()
 	loadEfficient(system, []uint16{opcodes.JT, 1, 5, opcodes.NOOP, opcodes.NOOP, opcodes.JT, 0, 5, opcodes.NOOP, opcodes.JF, 0, 15, opcodes.NOOP, opcodes.NOOP, opcodes.NOOP, opcodes.JF, 1, 15, 0})
 
+	//JT 1 5; PC = 5 after this
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
 
+	if system.ProgramCounter != 5 {
+		t.Error("Expected program counter to be 5 after JT 1 5, was actually", system.ProgramCounter)
+		t.Fail()
+	}
+
+	//JT 0 5; PC = 8 after this, as it doesn't run
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.ProgramCounter != 8 {
+		t.Error("Expected program counter to be 8 after JT 0 5, was actually", system.ProgramCounter)
+		t.Fail()
+	}
+
+	//NOOP
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	//JF 0 15; PC = 15
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.ProgramCounter != 15 {
+		t.Error("Expected program counter to be 15 after JF 0 15, was actually", system.ProgramCounter)
+		t.Fail()
+	}
+
+	//JF 1 15; PC = 18 as it doesn't run
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.ProgramCounter != 18 {
+		t.Error("Expected program counter to be 18 after JF 1 15, was actually", system.ProgramCounter)
+		t.Fail()
+	}
+}
+
+func TestSet(t *testing.T) {
+	system := interpreter.NewSystem()
+	loadEfficient(system, []uint16{opcodes.SET, 32768, 50, opcodes.SET, 32769, 32768})
+
+	//SET 32768 50; Sets register 0 to 50
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[0] != 50 {
+		t.Error("Expected register 0 to be 50, got", system.Registers[0])
+		t.Fail()
+	}
+
+	//SET 32769 32768; sets register 1 to be the value of register 0 (50)
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[1] != 50 {
+		t.Error("Expected register 1 to be 50, got", system.Registers[1])
+		t.Fail()
+	}
+}
+
+func TestCondSet(t *testing.T) {
+	system := interpreter.NewSystem()
+	loadEfficient(system, []uint16{opcodes.EQ, 32768, 1, 1, opcodes.EQ, 32769, 1, 5, opcodes.GT, 32770, 5, 1, opcodes.GT, 32771, 1, 5})
+
+	//eq 32768 1 1; register 0 = 1
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[0] != 1 {
+		t.Error("Expected register 0 to be 1, got ", system.Registers[0])
+	}
+
+	//eq 32769 1 5; register 1 = 0
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[1] != 0 {
+		t.Error("Expected register 1 to be 0, got ", system.Registers[1])
+	}
+
+	//gt 32770 5 1; register 2 = 1
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[2] != 1 {
+		t.Error("Expected register 2 to be 1, got ", system.Registers[2])
+	}
+
+	//gt 32771 1 5q register 3 = 0
+	if err := system.Step(); err != nil {
+		t.Error(err.Error())
+		t.Fail()
+	}
+
+	if system.Registers[3] != 0 {
+		t.Error("Expected register 3 to be 0, got ", system.Registers[3])
+	}
 }
