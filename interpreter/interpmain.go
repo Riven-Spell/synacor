@@ -1,13 +1,17 @@
 package interpreter
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"synacor/interpreter/opcodes"
 )
 
 const nMod = 32768
+
+var reader = bufio.NewReader(os.Stdin)
 
 type System struct {
 	Memory         [32768]uint16
@@ -131,6 +135,15 @@ func (s *System) Step() error {
 	case opcodes.OUT: //Output the ASCII character value of a; out a
 		if a, err := s.GetValue(s.Memory[s.ProgramCounter+1]); err == nil {
 			fmt.Printf("%c", rune(a))
+		} else {
+			return err
+		}
+
+	case opcodes.IN:
+		if a, err := s.GetLocation(s.Memory[s.ProgramCounter+1], false); err == nil {
+			if b, err := reader.ReadByte(); err == nil {
+				*a = uint16(b)
+			}
 		} else {
 			return err
 		}
