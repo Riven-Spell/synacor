@@ -10,7 +10,7 @@ func main() {
 	if len(os.Args) > 1 {
 		if fi, err := os.Stat(os.Args[1]); err == nil {
 			buffer := make([]byte, fi.Size())
-			fmt.Println("Loaded", len(buffer)/2, "bytes into program memory.")
+			fmt.Println("Loaded", len(buffer)/2, "words (16 bits) into program memory.")
 
 			f, err := os.Open(os.Args[1])
 			if err != nil {
