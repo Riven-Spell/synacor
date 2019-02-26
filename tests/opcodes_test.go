@@ -233,8 +233,8 @@ func TestStack(t *testing.T){
 		t.Fail()
 	}
 
-	if len(system.Stack) != 1 {
-		t.Error("Expected a stack length of 1, got", len(system.Stack))
+	if system.Stack.Value != 5 {
+		t.Error("Expected a top stack value of 5, got ", system.Stack.Value)
 		t.Fail()
 	}
 
@@ -244,8 +244,8 @@ func TestStack(t *testing.T){
 		t.Fail()
 	}
 
-	if len(system.Stack) != 2 {
-		t.Error("Expected a stack length of 2, got", len(system.Stack))
+	if system.Stack.Value != 6 {
+		t.Error("Expected a top stack value of 6, got ", system.Stack.Value)
 		t.Fail()
 	}
 
@@ -260,8 +260,8 @@ func TestStack(t *testing.T){
 		t.Fail()
 	}
 
-	if len(system.Stack) != 1 {
-		t.Error("Expected a stack length of 1, got", len(system.Stack))
+	if system.Stack.Value != 5 {
+		t.Error("Expected a top stack value of 5, got ", system.Stack.Value)
 		t.Fail()
 	}
 
@@ -276,8 +276,8 @@ func TestStack(t *testing.T){
 		t.Fail()
 	}
 
-	if len(system.Stack) != 0 {
-		t.Error("Expected a stack length of 0, got", len(system.Stack))
+	if system.Stack != nil {
+		t.Error("Expected a top stack value of nil, got ", system.Stack)
 		t.Fail()
 	}
 }
@@ -346,13 +346,13 @@ func TestCallRet(t *testing.T) {
 		t.Fail()
 	}
 
-	if len(system.Stack) == 1 {
-		if system.Stack[0] != 2 {
-			t.Error("Stack[0] should be 2, got", system.Stack[0])
+	if system.Stack != nil {
+		if system.Stack.Value != 2 {
+			t.Error("Top-stack value should be 2, got", system.Stack.Value)
 			t.Fail()
 		}
 	} else {
-		t.Error("Stack length should be 1, got", len(system.Stack))
+		t.Error("Expected a non-empty stack.")
 		t.Fail()
 	}
 
@@ -367,8 +367,8 @@ func TestCallRet(t *testing.T) {
 		t.Fail()
 	}
 
-	if len(system.Stack) != 0 {
-		t.Error("Expected stack length to be 0, got", len(system.Stack))
+	if system.Stack != nil {
+		t.Error("Expected empty stack.")
 		t.Fail()
 	}
 }

@@ -13,7 +13,7 @@ const nMod = 32768
 
 var reader = bufio.NewReader(os.Stdin)
 
-var funcMap = map[uint16]func(*System)error{
+var opcodeMap = map[uint16]func(*System)error{
 	opcodes.HALT: halt,
 	opcodes.SET: set,
 	opcodes.PUSH: push,
@@ -41,17 +41,23 @@ var funcMap = map[uint16]func(*System)error{
 type System struct {
 	Memory         [32768]uint16
 	Registers      [8]uint16
-	Stack          []uint16
+	//Stack          []uint16
+	Stack          *LinkedUInt16
 	ProgramCounter uint16
 	Halted         bool
 	DoJump         bool
+}
+
+type LinkedUInt16 struct {
+	Last *LinkedUInt16
+	Value uint16
 }
 
 func NewSystem() *System {
 	return &System{
 		Memory:         [32768]uint16{},
 		Registers:      [8]uint16{},
-		Stack:          make([]uint16, 0),
+		Stack:          nil,
 		ProgramCounter: 0,
 	}
 }
@@ -109,7 +115,7 @@ func (s *System) Step() error {
 	op := s.Memory[s.ProgramCounter]
 
 	toIncrement := opcodes.OpcodeLength[op]
-	if err := funcMap[op](s); err != nil {
+	if err := opcodeMap[op](s); err != nil {
 		return err
 	}
 

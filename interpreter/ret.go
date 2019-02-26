@@ -3,12 +3,12 @@ package interpreter
 import "errors"
 
 func ret(s *System) error {
-	if len(s.Stack) == 0 {
+	if s.Stack == nil {
 		s.Halted = true
 		return errors.New("can't return with an empty stack")
 	} else {
-		s.ProgramCounter = s.Stack[len(s.Stack) - 1]
-		s.Stack = s.Stack[:len(s.Stack) - 1]
+		s.ProgramCounter = s.Stack.Value
+		s.Stack = s.Stack.Last
 		s.DoJump = false
 	}
 
